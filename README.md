@@ -14,24 +14,6 @@
 \
 **Топик** — канал отправки и получения сообщений между устройствами, реестрами и клиентами брокера.
 
-```
-Чтобы устройства, реестры и клиенты брокера получали сообщения друг от друга через MQTT-сервер, подпишите их на нужные топики.
-```
-
-# Топики устройств
-```bash
-$devices/<dev-id>/events/water_consumption_chan1
-$devices/<dev-id>/events/water_consumption_chan2
-$devices/<dev-id>/events/pressure
-$devices/<dev-id>/events/charge
-$devices/<dev-id>/events/safety_flags
-```
-**Использование** - https://yandex.cloud/ru/docs/iot-core/concepts/topic/usage
-
-Физические устройства публикуют события в эти топики.\
-SCADA-система может подписаться на них.\
-Для хранения этих данных в облаке нужна PostgressSQL БД.
-
 # Шаги по развёртыванию IoT-инфраструктуры
 
 ## Первичные действия
@@ -45,8 +27,8 @@ SCADA-система может подписаться на них.\
 ```bash
 openssl req -x509 \
 -newkey rsa:4096 \
-  -keyout private-key-water-meter-telemetry.pem
-  -out cert-water-meter-telemetry.pem
+  -keyout registries/private-key.pem \
+  -out registries/cert.pem \
   -nodes \
   -days 365 \
   -subj '/CN=localhost'
@@ -54,14 +36,24 @@ openssl req -x509 \
 
 5. Создать  реестр, где будут все устройства
 ```bash
-yc iot registry create --name "water-meter-telemetry" --description "Test register for water meter MQTT sensors"
+yc iot registry create --name "water-meter-telemetry" --description "Test registry for water meter MQTT sensors"
 ```
 
 6. Добавить ранее созданный сертификат для нового реестра
 ```bash
 yc iot registry certificate add \
    --registry-name "water-meter-telemetry" \
-   --certificate-file register/cert-water-meter-telemetry.pem
+   --certificate-file registries/cert.pem
+```
+
+7. Получить ID реестра
+```bash
+yc iot registry get --name "water-meter-telemetry" | grep -w "id:" | awk -F " " '{print $2}'
+```
+Итоговые данные по созданному реестру (записать их в прошивку):
+```json
+"name": "water-meter-telemetry"
+"id": "are6phis3t903qjfrje3"
 ```
 
 ## Добавление нового устройства в реестр (повторить для каждого нового устройства)
@@ -69,8 +61,8 @@ yc iot registry certificate add \
 ```bash
 openssl req -x509 \
 -newkey rsa:4096 \
-  -keyout private-key-dev-sim7080-module.pem
-  -out cert-dev-sim7080-module.pem
+  -keyout devices/private-key.pem \
+  -out devices/cert.pem \
   -nodes \
   -days 365 \
   -subj '/CN=localhost'
@@ -87,15 +79,41 @@ yc iot device create \
 ```bash
 yc iot device certificate add \
   --device-name "sim7080-module-test" \
-  --certificate-file devices/cert-dev-sim7080-module.pem
+  --certificate-file devices/cert.pem
 ```
 
 10. Получить device-id
 ```bash
 yc iot device get --name sim7080-module-test | grep -w "id:" | awk -F " " '{print $2}'
 ```
-Физическое устройство (счётчик) представлен в сервисе Yandex Core в виде **имени устройства и его сертификата** (публичная часть). Топики устройсва существуют сразу при создании устройства. Чтобы в них что-то писать с реального физического устройства небходимо знать (в прошивке) id, которое создаётся яндексом.
+Физическое устройство (счётчик) представлен в сервисе Yandex Core в виде **имени устройства и его сертификата** (публичная часть). Топики устройсва существуют сразу при создании устройства. Чтобы в них что-то писать с реального физического устройства небходимо в прошивке знать id, который создаётся яндексом.
+
+Итог после генерации девайса:
 ```json
 "name": "sim7080-module-test"
-"id": "are9ndvq1h5gga64nmf0"
+"id": "areg0sn8p3rf0mkrc0q5"
 ```
+
+# Кто и какие топики читает
+```
+$registries/are6phis3t903qjfrje3/events
+```
+Это топик созданного реестра. **В него пишут все устройства**, авторизуясь по своим сертификатам. SCADA-система подписывается на этот же самый топик и парсит полученные сообщения.
+
+### Локально от имени устройсва (по сертификату) записать тестовые данные в топик реестра:
+```bash
+yc iot mqtt publish \
+  --cert devices/cert.pem \
+  --key devices/private-key.pem \
+  --topic '$registries/are6phis3t903qjfrje3/events' \
+  --message 'Test data' \
+  --qos 1
+```
+
+### Локально прочитать тестовые данные, развернув node-red:
+1) Запустить node-red в консоли
+2) Подписаться на `$registries/are6phis3t903qjfrje3/events`
+3) Печатать все присланные сообщения
+
+mqtt.cloud.yandex.net
+8883
