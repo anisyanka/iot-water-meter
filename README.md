@@ -184,6 +184,6 @@ AT+SMSSL=1,"rootCA.crt","deviceCert.pem"
 AT+SMCONN
 
 # Publish data
-AT+SMPUB="$registries/are6phis3t903qjfrje3/events",30,0,1
-{"msg": "Hello from SIM7080!"}
+AT+SMPUB="$registries/are6phis3t903qjfrje3/events",93,0,1
+{"ch1": "100", "ch1": "875759", "pressure": "20kPa", "charge": "76%", "safety_flags": "0x00"}
 ```
