@@ -1,0 +1,1 @@
+https://github.com/Marus/cortex-debug/blob/master/debug_attributes.md
