@@ -1,0 +1,3 @@
+[submodule "sources/Drivers/sim7080"]
+	path = sources/Drivers/sim7080
+	url = https://github.com/anisyanka/sim7080.git

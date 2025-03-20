@@ -129,6 +129,7 @@ INCDIR += sources/Drivers/STM32L0xx_HAL_Driver/Inc
 INCDIR += sources/Drivers/STM32L0xx_HAL_Driver/Inc/Legacy
 INCDIR += sources/Drivers/CMSIS/Device/ST/STM32L0xx/Include
 INCDIR += sources/Drivers/CMSIS/Include
+INCDIR += sources/Drivers/sim7080
 
 #
 #Source files
@@ -159,6 +160,8 @@ SOURCES += sources/Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart.c
 SOURCES += sources/Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart_ex.c
 SOURCES += sources/Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim.c
 SOURCES += sources/Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.c
+
+SOURCES += $(wildcard sources/Drivers/sim7080/*c)
 
 #
 #Linker scripts
