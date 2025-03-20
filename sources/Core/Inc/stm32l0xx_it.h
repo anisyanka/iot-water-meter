@@ -52,6 +52,7 @@ void SVC_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
 void DMA1_Channel1_IRQHandler(void);
+void RNG_LPUART1_IRQHandler(void);
 void LCD_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 
