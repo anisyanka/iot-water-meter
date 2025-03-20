@@ -166,10 +166,10 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
- // MX_ADC_Init();
+  MX_ADC_Init();
   MX_LCD_Init();
- // MX_LPUART1_UART_Init();
- // MX_USART1_UART_Init();
+  MX_LPUART1_UART_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_0, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_RESET);
@@ -503,11 +503,11 @@ static void MX_LPUART1_UART_Init(void)
   /* USER CODE END LPUART1_Init 1 */
   hlpuart1.Instance = LPUART1;
   hlpuart1.Init.BaudRate = 115200;
-  hlpuart1.Init.WordLength = UART_WORDLENGTH_7B;
+  hlpuart1.Init.WordLength = UART_WORDLENGTH_8B;
   hlpuart1.Init.StopBits = UART_STOPBITS_1;
   hlpuart1.Init.Parity = UART_PARITY_NONE;
   hlpuart1.Init.Mode = UART_MODE_TX_RX;
-  hlpuart1.Init.HwFlowCtl = UART_HWCONTROL_RTS_CTS;
+  hlpuart1.Init.HwFlowCtl = (SIM7080_UART_USE_FLOW_CTRL == 1) ? UART_HWCONTROL_RTS_CTS : UART_HWCONTROL_NONE;
   hlpuart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
   hlpuart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
   if (HAL_UART_Init(&hlpuart1) != HAL_OK)
