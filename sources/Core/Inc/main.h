@@ -41,7 +41,8 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-
+#define GSM_PWRKEY_PORT GPIOB
+#define GSM_PWRKEY_PIN  GPIO_PIN_14
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

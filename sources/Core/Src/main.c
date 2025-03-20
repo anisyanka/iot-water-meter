@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "logger.h"
+#include "mqtt_adapter.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -205,8 +206,12 @@ int main(void)
   extern uint32_t SystemCoreClock;
   logger_dgb_print("[water-meter] FW started. Core clock = %ld Hz\n", SystemCoreClock);
 
+  /* Enable SIM7080 module, set params for NB-Iot and Yandex MQTT. Real connection will inside polling function */
+  mqtt_init();
+
   while (1)
   {
+    mqtt_poll();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
