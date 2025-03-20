@@ -79,3 +79,9 @@ DebugConfig/*
 *.scvd
 *.iex
 RTE_Components.h
+
+# Build system
+build-app/*
+
+# code
+.vscode/
