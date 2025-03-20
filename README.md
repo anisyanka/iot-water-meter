@@ -187,3 +187,22 @@ AT+SMCONN
 AT+SMPUB="$registries/are6phis3t903qjfrje3/events",93,0,1
 {"ch1": "100", "ch1": "875759", "pressure": "20kPa", "charge": "76%", "safety_flags": "0x00"}
 ```
+
+# Сборка на Linux
+```
+sudo apt-get install git make cmake libusb-1.0-0-dev
+sudo apt-get install gcc build-essential
+
+git clone https://github.com/stlink-org/stlink
+cd stlink
+cmake .
+make
+
+cd bin
+sudo cp st-* /usr/local/bin
+cd ../lib
+sudo cp *.so* /lib32
+cd ../
+
+sudo cp config/udev/rules.d/49-stlinkv* /etc/udev/rules.d/
+```
