@@ -188,8 +188,11 @@ AT+SMPUB="$registries/are6phis3t903qjfrje3/events",93,0,1
 {"ch1": "100", "ch1": "875759", "pressure": "20kPa", "charge": "76%", "safety_flags": "0x00"}
 ```
 
-# Сборка на Linux
+# Build on Linux
+
+### Install st-link
 ```
+# Package manager might be different. Depends on OS.
 sudo apt-get install git make cmake libusb-1.0-0-dev
 sudo apt-get install gcc build-essential
 
@@ -205,4 +208,18 @@ sudo cp *.so* /lib32
 cd ../
 
 sudo cp config/udev/rules.d/49-stlinkv* /etc/udev/rules.d/
+```
+
+### Install arm-none-eabi-gcc
+```
+Download for here for your OS
+https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
+```
+
+### Install GDB and openocd
+```
+# Mac
+brew install open-ocd
+
+sudo apt install openocd
 ```
