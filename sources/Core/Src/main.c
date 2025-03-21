@@ -204,7 +204,7 @@ int main(void)
 
   /* Hello from FW */
   extern uint32_t SystemCoreClock;
-  logger_dgb_print("[water-meter] FW started. Core clock = %ld Hz\n", SystemCoreClock);
+  logger_dgb_print("\n\n[water-meter] FW started. Core clock = %ld Hz\r\n", SystemCoreClock);
 
   /* Enable SIM7080 module, set params for NB-Iot and Yandex MQTT. Real connection will inside polling function */
   mqtt_init();

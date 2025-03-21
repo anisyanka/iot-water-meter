@@ -19,10 +19,10 @@ int transmit_data(uint8_t *data, size_t len)
 {
     if (HAL_UART_Transmit(&hlpuart1, (const uint8_t *)data,
                           (uint16_t)len, 100) != HAL_OK) {
-        return SIM7080_STATUS_HW_TX_FAIL;
+        return SIM7080_RET_STATUS_HW_TX_FAIL;
     }
 
-    return SIM7080_STATUS_SUCCESS;
+    return SIM7080_RET_STATUS_SUCCESS;
 }
 
 void mqtt_init(void)
@@ -41,7 +41,7 @@ void mqtt_init(void)
 
     rv = sim7080_init_hw_and_net_params(&sim7080_dev, &net_mts_nbiot,
                                         &protocol_yandex_mqtt);
-    if (rv != SIM7080_STATUS_SUCCESS) {
+    if (rv != SIM7080_RET_STATUS_SUCCESS) {
         logger_dgb_print("[mqtt] sim7080_init_hw_and_net_params() failed. err=%d --> %s\r\n",
                          rv, sim7080_err_to_string(rv));
     }
@@ -65,14 +65,15 @@ void mqtt_poll(void)
     rv = sim7080_poll(&sim7080_dev, &err);
     switch (rv) {
     case SIM7080_SM_SOME_ERR_HAPPENED:
-        logger_dgb_print("[sim7080] unvalid state\r\n");
-        HAL_Delay(500);
-        /* TODO: reset sim7080 here and start connection sequence again */
+        logger_dgb_print("[sim7080] unvalid state. err=%d --> %s\r\n",
+                         err, sim7080_err_to_string(err));
+        HAL_Delay(2000);
+        /* TODO: might be needed to do re-init sim7080 here and start connection sequence again */
         break;
 
     /* State when fw started and power key has been toggled */
     case SIM7080_SM_INITIAL:
-        if (sim7080_init(&sim7080_dev) == SIM7080_STATUS_SUCCESS) {
+        if (sim7080_init(&sim7080_dev) == SIM7080_RET_STATUS_SUCCESS) {
             logger_dgb_print("[sim7080] base init started...\r\n");
         }
         break;
@@ -81,7 +82,7 @@ void mqtt_poll(void)
     case SIM7080_SM_INIT_IN_PROGRESS:
         break;
     case SIM7080_SM_INIT_DONE:
-        if (sim7080_net_connect(&sim7080_dev) == SIM7080_STATUS_SUCCESS) {
+        if (sim7080_net_connect(&sim7080_dev) == SIM7080_RET_STATUS_SUCCESS) {
             logger_dgb_print("[sim7080] base init done!\r\n");
             logger_dgb_print("[sim7080] nbiot connection started...\r\n");
         }
@@ -93,7 +94,7 @@ void mqtt_poll(void)
     case SIM7080_SM_NET_CONNECT_FAILED:
         break;
     case SIM7080_SM_NET_CONNECTED:
-        if (sim7080_proto_connect(&sim7080_dev) == SIM7080_STATUS_SUCCESS) {
+        if (sim7080_proto_connect(&sim7080_dev) == SIM7080_RET_STATUS_SUCCESS) {
             logger_dgb_print("[sim7080] nbiot connection done!\r\n");
             logger_dgb_print("[sim7080] yandex mqtt connection started...\r\n");
         }
@@ -113,7 +114,6 @@ void mqtt_poll(void)
     }
 }
 
-
 void mqtt_send_data(char *data, size_t len)
 {
     ;
@@ -124,7 +124,7 @@ void mqtt_rx_new_byte_isr(void)
     sim7080_rx_byte_isr(&sim7080_dev, rx_byte);
     HAL_UART_Receive_IT(&hlpuart1, &rx_byte, 1);
 
-#if 1
-    logger_dgb_print_no_lib("b", 1);
+#if 0
+    logger_dgb_print_no_lib("rx\r\n", 4);
 #endif
 }
