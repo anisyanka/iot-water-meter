@@ -1,0 +1,50 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "make all",
+            "command": "/usr/bin/make",
+            "args": [
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "clean"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "flash app via openocd/stlink",
+            "type": "shell",
+            "command": "/opt/homebrew/bin/openocd",
+            "args": [
+                "-f",
+                "${workspaceFolder}/make/target/stm32l0-relax-openocd.cfg",
+                "-c",
+                "\"init\"",
+                "-c",
+                "\"halt\"",
+                "-c",
+                "flash write_image erase build-app/app.bin 0x8000000",
+                "-c",
+                "\"reset\"",
+                "-c",
+                "\"resume 0x08000000\"",
+                "-c",
+                "\"exit\""
+            ],
+            "problemMatcher": []
+        }
+    ],
+    "version": "2.0.0"
+}

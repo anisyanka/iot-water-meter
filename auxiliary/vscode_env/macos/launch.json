@@ -12,15 +12,13 @@
             "name": "Debug APP with ST-Link",
             "request": "launch",
             "type": "cortex-debug",
-            "device": "STM32L0x3",
             "runToEntryPoint": "main",
             "showDevDebugOutput": "both",
-            "serverpath": "/usr/bin/stlink-server", 
-            "serverArgs": [],
-            "servertype": "stlink",
-            "interface": "swd",
-            "armToolchainPath": "/usr/bin/",
-            "svdFile": "${workspaceRoot}/target/stm32l0x3.svd"
+            "servertype": "openocd",
+            "configFiles": [
+                "/opt/homebrew/Cellar/open-ocd/0.12.0_1/share/openocd/scripts/interface/stlink.cfg",
+                "/opt/homebrew/Cellar/open-ocd/0.12.0_1/share/openocd/scripts/target/stm32l0.cfg",
+            ],
         }
     ]
 }

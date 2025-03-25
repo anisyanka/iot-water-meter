@@ -1,0 +1,20 @@
+{
+    "cortex-debug.gdbPath.linux": "/usr/bin/gdb-multiarch",
+    "cortex-debug.openocdPath.linux": "/usr/bin/openocd",
+    "cortex-debug.gdbPath.osx": "/Applications/ARM/bin/arm-none-eabi-gdb",
+    "cortex-debug.openocdPath.osx": "/opt/homebrew/bin/openocd",
+    "files.associations": {
+        "stm32l0xx_hal.h": "c",
+        "stm32l0xx_ll_rcc.h": "c",
+        "stm32l0xx_ll_utils.h": "c",
+        "stm32l0xx_ll_pwr.h": "c",
+        "time.h": "c",
+        "main.h": "c",
+        "stm32l0xx_it.h": "c",
+        "logger.h": "c",
+        "mqtt_adapter.h": "c",
+        "stdint.h": "c",
+        "sim7080_configs.h": "c",
+        "sim7080.h": "c"
+    }
+}
