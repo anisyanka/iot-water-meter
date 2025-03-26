@@ -26,6 +26,7 @@ void logger_dgb_print(const char *format, ...)
 
 void logger_dgb_print_no_lib(const char *msg, size_t len)
 {
+#if (FW_DEBUG_MODE == 1)
     extern uint32_t SystemCoreClock;
 
     for (int i = 0; i < len; ++i) {
@@ -38,4 +39,5 @@ void logger_dgb_print_no_lib(const char *msg, size_t len)
             __NOP();
         }
     }
+#endif
 }
