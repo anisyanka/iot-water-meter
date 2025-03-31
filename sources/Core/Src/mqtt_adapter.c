@@ -2,116 +2,128 @@
 #include "logger.h"
 #include "mqtt_adapter.h"
 #include "sim7080.h"
-#include "sim7080_configs.h"
 
+#if (USE_EXERNAL_SIM7080 == 1)
+extern UART_HandleTypeDef huart1;
+# define SIM7080_UART huart1
+#else
 extern UART_HandleTypeDef hlpuart1;
+# define SIM7080_UART hlpuart1
+#endif
 
 static sim7080_dev_t sim7080_dev = { 0 };
 static sim7080_ll_t ll = { 0 };
-static uint8_t rx_byte = 0;
+static sim7080_app_func_t app_funcs = { 0 };
 
-static void pwrkey_pin_set(void) { HAL_GPIO_WritePin(GSM_PWRKEY_PORT, GSM_PWRKEY_PIN, GPIO_PIN_RESET); }
-static void pwrkey_pin_reset(void) { HAL_GPIO_WritePin(GSM_PWRKEY_PORT, GSM_PWRKEY_PIN, GPIO_PIN_SET); }
-static void dtr_pin_set(void) {  }
-static void dtr_pin_reset(void) {  }
-
-int transmit_data(uint8_t *data, size_t len)
+static void clear_rx_flag(void)
 {
-    if (HAL_UART_Transmit(&hlpuart1, (const uint8_t *)data,
-                          (uint16_t)len, 100) != HAL_OK) {
+    /* Receive data, clear flag */
+    volatile uint8_t chartoreceive = (&SIM7080_UART)->Instance->RDR;
+    (void)chartoreceive;
+}
+
+static void pwrkey_pin_set(void)
+{
+#if (USE_EXERNAL_SIM7080 == 1)
+    HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_SET);
+#else
+    HAL_GPIO_WritePin(GSM_PWRKEY_PORT, GSM_PWRKEY_PIN, GPIO_PIN_RESET);
+#endif
+}
+
+static void pwrkey_pin_reset(void)
+{
+#if (USE_EXERNAL_SIM7080 == 1)
+    HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_RESET);
+#else
+    HAL_GPIO_WritePin(GSM_PWRKEY_PORT, GSM_PWRKEY_PIN, GPIO_PIN_SET);
+#endif
+}
+
+static int transmit_data_poll(uint8_t *data, size_t len, uint32_t timeout_ms)
+{
+    if (HAL_UART_Transmit(&SIM7080_UART, (const uint8_t *)data,
+                          (uint16_t)len, timeout_ms) != HAL_OK) {
+        logger_dgb_print("[mqtt] HAL_UART_Transmit() failed\r\n");
         return SIM7080_RET_STATUS_HW_TX_FAIL;
     }
 
     return SIM7080_RET_STATUS_SUCCESS;
 }
 
+static int receive_irq_start(uint8_t *rx_data, size_t rx_desired_len)
+{
+    // clear_rx_flag();
+    // __HAL_UART_ENABLE_IT(&SIM7080_UART, UART_IT_RXNE);
+
+    /* Start bytes waiting from the module */
+    if (HAL_UART_Receive_IT(&SIM7080_UART, rx_data,
+                            (uint16_t)rx_desired_len) != HAL_OK) {
+        logger_dgb_print("[mqtt] HAL_UART_Receive_IT() failed."
+                         "Can't start UART RX\r\n");
+        return SIM7080_RET_STATUS_HW_RX_FAIL;
+    }
+
+    return SIM7080_RET_STATUS_SUCCESS;
+}
+
+static int receive_irq_stop(void)
+{
+    __HAL_UART_DISABLE_IT(&SIM7080_UART, UART_IT_RXNE);
+    return SIM7080_RET_STATUS_SUCCESS;
+}
+
+static void mqtt_adapter_net_registration_done(void) { ; }
+static void mqtt_adapter_server_connection_done(void) { ; }
+static void mqtt_adapter_transmittion_done(void) { ; }
+
+static void mqtt_adapter_error_occured(int error)
+{
+    logger_dgb_print("[mqtt] sim7080 failed. err=%d --> %s\r\n",
+                     error, sim7080_err_to_string(error));
+    sim7080_reset(&sim7080_dev);
+}
+
 void mqtt_init(void)
 {
-    int rv = 0;
+    int rv = SIM7080_RET_STATUS_SUCCESS;
 
     ll.delay_ms = HAL_Delay;
     ll.get_tick_ms = HAL_GetTick;
-    ll.dtr_pin_set = dtr_pin_set;
-    ll.dtr_pin_reset = dtr_pin_reset;
     ll.pwrkey_pin_set = pwrkey_pin_set;
     ll.pwrkey_pin_reset = pwrkey_pin_reset;
-    ll.transmit_data = transmit_data;
+    ll.transmit_data_polling_mode = transmit_data_poll;
+    ll.receive_in_async_mode_start = receive_irq_start;
+    ll.receive_in_async_mode_stop = receive_irq_stop;
 
-    sim7080_dev.ll_funcs = &ll;
-
-    rv = sim7080_init_hw_and_net_params(&sim7080_dev, &net_mts_nbiot,
-                                        &protocol_yandex_mqtt);
+    rv = sim7080_init(&sim7080_dev, &ll);
     if (rv != SIM7080_RET_STATUS_SUCCESS) {
-        logger_dgb_print("[mqtt] sim7080_init_hw_and_net_params() failed. err=%d --> %s\r\n",
+        logger_dgb_print("[mqtt] sim7080_init() failed. err=%d --> %s\r\n",
                          rv, sim7080_err_to_string(rv));
     }
 
-    /* Start bytes waiting from the module */
-    if (HAL_UART_Receive_IT(&hlpuart1, &rx_byte, 1) != HAL_OK) {
-        logger_dgb_print("[mqtt] HAL_UART_Receive_IT() failed. Can't start UART RX\r\n");
-        rv = -1;
+#if (FW_DEBUG_MODE == 1)
+    sim7080_debug_mode(&sim7080_dev, logger_dgb_print);
+#endif
+
+    /* Setup user callbacks */
+    app_funcs.net_registration_done = mqtt_adapter_net_registration_done;
+    app_funcs.mqtt_server_connection_done = mqtt_adapter_server_connection_done;
+    app_funcs.mqtt_transmission_done = mqtt_adapter_transmittion_done;
+    app_funcs.error_occured = mqtt_adapter_error_occured;
+
+    rv = sim7080_setup_app_cb(&sim7080_dev, &app_funcs);
+    if (rv != SIM7080_RET_STATUS_SUCCESS) {
+        logger_dgb_print("[mqtt] sim7080_setup_app_cb() failed. err=%d --> %s\r\n",
+                         rv, sim7080_err_to_string(rv));
     }
 
-    if (rv == 0) {
-        logger_dgb_print("[sim7080] Setup net and protocol params done\r\n");
-    }
+    logger_dgb_print("[sim7080] Setup net and protocol params done\r\n");
 }
 
 void mqtt_poll(void)
 {
-    int rv = 0;
-    int err = 0;
-
-    rv = sim7080_poll(&sim7080_dev, &err);
-    switch (rv) {
-    case SIM7080_SM_SOME_ERR_HAPPENED:
-        logger_dgb_print("[sim7080] unvalid state. err=%d --> %s\r\n",
-                         err, sim7080_err_to_string(err));
-        HAL_Delay(2000);
-        /* TODO: might be needed to do re-init sim7080 here and start connection sequence again */
-        break;
-
-    /* State when fw started and power key has been toggled */
-    case SIM7080_SM_INITIAL:
-        if (sim7080_init(&sim7080_dev) == SIM7080_RET_STATUS_SUCCESS) {
-            logger_dgb_print("[sim7080] base init started...\r\n");
-        }
-        break;
-
-    /* Base module init sequence has been started */
-    case SIM7080_SM_INIT_IN_PROGRESS:
-        break;
-    case SIM7080_SM_INIT_DONE:
-        if (sim7080_net_connect(&sim7080_dev) == SIM7080_RET_STATUS_SUCCESS) {
-            logger_dgb_print("[sim7080] base init done!\r\n");
-            logger_dgb_print("[sim7080] nbiot connection started...\r\n");
-        }
-        break;
-
-    /* Base init done. Setup NB-Iot connection has been started */
-    case SIM7080_SM_NET_CONNECT_IN_PROGRESS:
-        break;
-    case SIM7080_SM_NET_CONNECT_FAILED:
-        break;
-    case SIM7080_SM_NET_CONNECTED:
-        if (sim7080_proto_connect(&sim7080_dev) == SIM7080_RET_STATUS_SUCCESS) {
-            logger_dgb_print("[sim7080] nbiot connection done!\r\n");
-            logger_dgb_print("[sim7080] yandex mqtt connection started...\r\n");
-        }
-        break;
-
-    /* Connect to MTS NB-Iot done. Setup MQTT connection has been started */
-    case SIM7080_SM_PROTO_CONNECT_IN_PROGRESS:
-        break;
-    case SIM7080_SM_PROTO_CONNECT_FAILED:
-        break;
-    case SIM7080_SM_PROTO_CONNECTED:
-        logger_dgb_print("[sim7080] yandex mqtt connection done!\r\n");
-        break;
-
-    default:
-        break;
-    }
+    sim7080_poll(&sim7080_dev);
 }
 
 void mqtt_send_data(char *data, size_t len)
@@ -121,10 +133,5 @@ void mqtt_send_data(char *data, size_t len)
 
 void mqtt_rx_new_byte_isr(void)
 {
-    sim7080_rx_byte_isr(&sim7080_dev, rx_byte);
-    HAL_UART_Receive_IT(&hlpuart1, &rx_byte, 1);
-
-#if 0
-    logger_dgb_print_no_lib("rx\r\n", 4);
-#endif
+    sim7080_rx_byte_isr(&sim7080_dev);
 }

@@ -37,7 +37,7 @@ endif
 # Debug mode settings
 #######################################
 ifeq ($(strip $(BUILD_DEBUG_MODE)),yes)
-PPDEFS += FW_DEBUG_MODE=1
+# PPDEFS += FW_DEBUG_MODE=1
 
 DBG_OPTS = -gdwarf-2 -ggdb -g3
 OPT_LVL = 0
