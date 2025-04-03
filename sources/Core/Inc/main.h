@@ -41,8 +41,13 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-#define GSM_PWRKEY_PORT GPIOB
-#define GSM_PWRKEY_PIN  GPIO_PIN_14
+#if (USE_EXERNAL_SIM7080 == 1)
+# define GSM_PWRKEY_PORT GPIOD
+# define GSM_PWRKEY_PIN  GPIO_PIN_2
+#else
+# define GSM_PWRKEY_PORT GPIOB
+# define GSM_PWRKEY_PIN  GPIO_PIN_14
+#endif
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
