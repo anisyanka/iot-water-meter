@@ -45,6 +45,10 @@ static int transmit_data_poll(uint8_t *data, size_t len, uint32_t timeout_ms)
     return SIM7080_RET_STATUS_SUCCESS;
 }
 
+static void mqtt_adapter_bootup_done_cb(void) {}
+static void mqtt_adapter_initial_setup_done_cb(void) {}
+static void mqtt_adapter_setup_device_keys_done_cb(void) {}
+
 static void mqtt_adapter_net_registration_done_cb(void)
 {
     logger_dgb_print("[mqtt] NB-Iot net registration - SUCCESS\t\n");
@@ -53,6 +57,11 @@ static void mqtt_adapter_net_registration_done_cb(void)
 static void mqtt_adapter_server_connection_done_cb(void)
 {
     logger_dgb_print("[mqtt] Yandex broker connection - SUCCESS\t\n");
+
+    /*
+     * TODO: here the sim7080 is ready to operate with Yandex broker.
+     * We can start sending data.
+     */
 }
 
 static void mqtt_adapter_transmittion_done_cb(void)
@@ -61,7 +70,7 @@ static void mqtt_adapter_transmittion_done_cb(void)
 
     /*
      * TODO: useful data has been sent.
-     * Start some timer (RTC) to send it again after some time?
+     * Start some timer (RTC?) to send it again after some time?
      */
 }
 
@@ -104,7 +113,10 @@ void mqtt_init(void)
 #endif
 
     /* Setup user callbacks */
+    app_funcs.bootup_done = mqtt_adapter_bootup_done_cb;
+    app_funcs.initial_setup_done = mqtt_adapter_initial_setup_done_cb;
     app_funcs.net_registration_done = mqtt_adapter_net_registration_done_cb;
+    app_funcs.setup_device_keys_done = mqtt_adapter_setup_device_keys_done_cb;
     app_funcs.mqtt_server_connection_done = mqtt_adapter_server_connection_done_cb;
     app_funcs.mqtt_transmission_done = mqtt_adapter_transmittion_done_cb;
     app_funcs.error_occured = mqtt_adapter_error_occured_cb;
