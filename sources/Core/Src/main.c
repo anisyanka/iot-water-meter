@@ -20,6 +20,8 @@
 #include "main.h"
 #include "logger.h"
 #include "mqtt_adapter.h"
+#include "digital_in_core.h"
+#include "buttons.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -207,12 +209,17 @@ int main(void)
   extern uint32_t SystemCoreClock;
   logger_dgb_print("\n\n[water-meter] FW started. Core clock = %ld Hz\r\n", SystemCoreClock);
 
+  /* Init SW1, SW2 and its handlers */
+  buttons_init();
+
   /* Enable SIM7080 module, set params for NB-Iot and Yandex MQTT. Real connection will inside polling function */
   mqtt_init();
 
   while (1)
   {
     mqtt_poll();
+	digital_in_poll();
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -662,10 +669,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PB11 PB12 */
-  GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+//   GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
+//   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+//   GPIO_InitStruct.Pull = GPIO_PULLUP;
+//   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PB15 */
   GPIO_InitStruct.Pin = GPIO_PIN_15;

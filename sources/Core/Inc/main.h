@@ -48,6 +48,17 @@ extern "C" {
 # define GSM_PWRKEY_PORT GPIOB
 # define GSM_PWRKEY_PIN  GPIO_PIN_14
 #endif
+
+#define SW1_BTN_ID        0
+#define SW1_BTN_PORT      GPIOB
+#define SW1_BTN_PIN       GPIO_PIN_11
+#define SW1_PORT_CLK_EN() __HAL_RCC_GPIOB_CLK_ENABLE()
+
+#define SW2_BTN_ID        1
+#define SW2_BTN_PORT      GPIOB
+#define SW2_BTN_PIN       GPIO_PIN_12
+#define SW2_PORT_CLK_EN() __HAL_RCC_GPIOB_CLK_ENABLE()
+
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

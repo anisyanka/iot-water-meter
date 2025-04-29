@@ -135,9 +135,13 @@ void mqtt_poll(void)
     sim7080_poll(&sim7080_dev);
 }
 
-void mqtt_send_data(char *data, size_t len)
+void mqtt_send_data(const char *data, size_t len)
 {
-    ;
+    if (sim7080_publish_data(&sim7080_dev, data, len) == SIM7080_RET_STATUS_SUCCESS) {
+        logger_dgb_print("[mqtt] sending data in progress...\r\n");
+    } else {
+        logger_dgb_print("[mqtt] failed to start send data\r\n");
+    }
 }
 
 void mqtt_rx_new_byte_isr(void)

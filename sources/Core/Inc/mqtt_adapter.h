@@ -10,7 +10,7 @@ extern "C" {
 
 void mqtt_init(void);
 void mqtt_poll(void);
-void mqtt_send_data(char *data, size_t len);
+void mqtt_send_data(const char *data, size_t len);
 void mqtt_rx_new_byte_isr(void);
 
 #ifdef __cplusplus

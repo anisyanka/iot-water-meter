@@ -21,6 +21,8 @@ void logger_dgb_print(const char *format, ...)
     va_end(args);
 
     HAL_UART_Transmit(&huart1, log_buf, len, 100);
+#else
+    (void)format;
 #endif
 }
 
@@ -39,5 +41,8 @@ void logger_dgb_print_no_lib(const char *msg, size_t len)
             __NOP();
         }
     }
+#else
+    (void)msg;
+    (void)len;
 #endif
 }

@@ -46,7 +46,7 @@ CREATE_MAP=yes
 #
 # Debug or release mode
 #
-BUILD_DEBUG_MODE=yes
+BUILD_DEBUG_MODE=no
 
 #
 #Tool-chain prefix
@@ -121,6 +121,7 @@ PPDEFS += STM32L073xx
 PPDEFS += USE_HAL_DRIVER
 PPDEFS += SIM7080_UART_USE_FLOW_CTRL=1
 PPDEFS += USE_EXERNAL_SIM7080=1 # LCD doesn't work in this case
+PPDEFS += SIM7080_SEND_DATA_TEST=1
 
 #
 #Include directories
